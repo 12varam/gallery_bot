@@ -36,6 +36,7 @@ class Database:
             password=env.str("DB_PASSWORD"),
         )
 
+@dataclass
 class Config:
     bot: Bot
     db: Database
