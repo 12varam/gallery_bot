@@ -2,7 +2,7 @@ from aiogram import Router, types
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
 from fsm.states import CreateGallery
-from database.connection import register_user, add_new_gallery
+from database.connection import register_user, add_new_gallery, get_galleries
 from database.tables import check_gallery_exists
 
 
@@ -36,7 +36,7 @@ async def process_gallery_name(message: types.Message, state: FSMContext):
 
     gallery_name = message.text.strip()
     tg_chat_id = message.from_user.id
-    
+
     if len(gallery_name.split()) > 1:
         return await message.answer(
             "Gallery's name should be made of 1 word. Let's try something else:"
@@ -56,3 +56,25 @@ async def process_gallery_name(message: types.Message, state: FSMContext):
     await message.answer(f"Gallery '{gallery_name}' was successfully created!")
 
     await state.clear()
+
+
+@router.message(Command("mygalleries"))
+async def handle_mygalleries(message: types.Message):
+    galleries = get_galleries(message.chat.id)
+
+    galleries_corrected = []
+    
+    for g in galleries:
+        galleries_corrected.append(g[0])
+
+    galleries_formatted = ""
+    
+    for g_name in galleries_corrected:
+        galleries_formatted += f"{g_name}\n"
+
+    await message.answer(
+        f"""
+        here's the list of your galleries:
+{galleries_formatted}
+    """
+    )
