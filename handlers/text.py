@@ -39,7 +39,7 @@ async def process_gallery_name(message: types.Message, state: FSMContext):
     
     if gallery_name.split():
         return await message.answer(
-            ""
+            "Gallery's name should be made of 1 word. Let's try something else:"
         )
 
     if len(gallery_name) < 3 or len(gallery_name) > 30:
