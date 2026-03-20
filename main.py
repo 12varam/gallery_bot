@@ -16,6 +16,7 @@ async def main():
             BotCommand(command="start", description="Start the bot"),
             BotCommand(command="info", description="Get information about this bot"),
             BotCommand(command="newgallery", description="Add a new gallery"),
+            BotCommand(command="mygalleries", description="Will show you a list of galleries"),
         ]
     )
 
