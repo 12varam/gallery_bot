@@ -1,7 +1,6 @@
-from database.tables import create_gallery_table, create_images_table
+from database.tables import create_tables
 
 
-create_gallery_table()
-create_images_table()
+create_tables()
 
-# write this command to the terminal: python -m utils.on_startup.py
+# write this command to the terminal: python -m utils.on_startup
