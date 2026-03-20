@@ -37,7 +37,7 @@ async def process_gallery_name(message: types.Message, state: FSMContext):
     gallery_name = message.text.strip()
     tg_chat_id = message.from_user.id
     
-    if gallery_name.split():
+    if len(gallery_name.split()) > 1:
         return await message.answer(
             "Gallery's name should be made of 1 word. Let's try something else:"
         )
