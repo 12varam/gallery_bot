@@ -43,3 +43,24 @@ def get_user_id(tg_chat_id):
         return user_id[0]
     else:
         return None
+
+
+def add_new_gallery(tg_chat_id, gallery_name):
+    connection, cursor = connect_to_db()
+
+    cursor.execute(
+        "SELECT id FROM users WHERE tg_chat_id = (%s)",
+        (tg_chat_id,),
+    )
+    user_id = cursor.fetchone()
+    
+    if user_id:
+        user_id = user_id[0]
+        
+        cursor.execute(
+            "INSERT INTO galleries (name, user_id) VALUES (%s, %s)",
+            (user_id, gallery_name)
+        )
+    
+    connection.commit()
+    connection.close()
