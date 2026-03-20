@@ -32,19 +32,24 @@ async def handle_newgallery(message: types.Message, state: FSMContext):
 @router.message(CreateGallery.waiting_for_name)
 async def process_gallery_name(message: types.Message, state: FSMContext):
     if not message.text:
-        return await message.answer("Пожалуйста, введи название текстом!")
+        return await message.answer("Gallery's name should be text, nothing else!")
 
     gallery_name = message.text.strip()
     tg_chat_id = message.from_user.id
+    
+    if gallery_name.split():
+        return await message.answer(
+            ""
+        )
 
     if len(gallery_name) < 3 or len(gallery_name) > 30:
         return await message.answer(
-            "Название должно быть от 3 до 30 символов. Попробуй другое:"
+            "Gallery's name shouldn't be shorter than 3 and longer than 30 symbols. Let's try something else:"
         )
 
     if check_gallery_exists(tg_chat_id, gallery_name):
         return await message.answer(
-            f"Gallery named '{gallery_name}' already exists Выбери другое имя:"
+            f"Gallery named '{gallery_name}' already exists. Let's try something else:"
         )
 
     add_new_gallery(tg_chat_id, gallery_name)
