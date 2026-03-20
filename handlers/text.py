@@ -1,6 +1,9 @@
 from aiogram import Router, types
 from aiogram.filters.command import Command
-from database.connection import register_user
+from aiogram.fsm.context import FSMContext
+from fsm.states import CreateGallery
+from database.connection import register_user, add_new_gallery
+from database.tables import check_gallery_exists
 
 
 router = Router()
@@ -8,11 +11,8 @@ router = Router()
 
 @router.message(Command("start"))
 async def handle_start(message: types.Message):
-    register_user(
-        message.from_user.id,
-        message.from_user.username
-    )
-    
+    register_user(message.from_user.id, message.from_user.username)
+
     await message.answer(f"Welcome to the gallery bot {message.from_user.first_name}!")
 
 
@@ -21,3 +21,33 @@ async def handle_info(message: types.Message):
     await message.answer(
         "This bot can save your images into galleries and show them to you whenever you want!"
     )
+
+
+@router.message(Command("newgallery"))
+async def handle_newgallery(message: types.Message, state: FSMContext):
+    await message.answer("Please enter your gallery's name:")
+    await state.set_state(CreateGallery.waiting_for_name)
+
+
+@router.message(CreateGallery.waiting_for_name)
+async def process_gallery_name(message: types.Message, state: FSMContext):
+    if not message.text:
+        return await message.answer("Пожалуйста, введи название текстом!")
+
+    gallery_name = message.text.strip()
+    tg_chat_id = message.from_user.id
+
+    if len(gallery_name) < 3 or len(gallery_name) > 30:
+        return await message.answer(
+            "Название должно быть от 3 до 30 символов. Попробуй другое:"
+        )
+
+    if check_gallery_exists(tg_chat_id, gallery_name):
+        return await message.answer(
+            f"Gallery named '{gallery_name}' already exists Выбери другое имя:"
+        )
+
+    add_new_gallery(tg_chat_id, gallery_name)
+    await message.answer(f"Gallery '{gallery_name}' was successfully created!")
+
+    await state.clear()
