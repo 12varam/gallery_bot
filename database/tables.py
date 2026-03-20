@@ -33,3 +33,20 @@ def create_tables():
     )
     connection.commit()
     connection.close()
+
+
+def check_gallery_exists(tg_chat_id, gallery_name):
+    connection, cursor = connect_to_db()
+
+    cursor.execute(
+        """
+        SELECT 1 FROM galleries
+        JOIN users ON galleries.user_id = users.id
+        WHERE users.tg_chat_id = %s AND galleries.name = %s
+    """,
+        (tg_chat_id, gallery_name),
+    )
+
+    exists = cursor.fetchone() is not None
+    connection.close()
+    return exists
