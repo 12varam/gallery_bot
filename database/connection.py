@@ -58,7 +58,7 @@ def add_new_gallery(tg_chat_id, gallery_name):
         
         cursor.execute(
             "INSERT INTO galleries (name, user_id) VALUES (%s, %s)",
-            (user_id, gallery_name)
+            (gallery_name, user_id)
         )
     
     connection.commit()
