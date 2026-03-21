@@ -26,8 +26,8 @@ def create_tables():
     CREATE TABLE IF NOT EXISTS images (
         id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
         file_id TEXT NOT NULL,
-        description TEXT NOT NULL,
-        gallery_id INTEGER REFERENCES galleries(id)
+        description TEXT,
+        gallery_id INTEGER REFERENCES galleries(id) ON DELETE CASCADE
     )
     """
     )
