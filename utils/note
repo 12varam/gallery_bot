@@ -1,0 +1,3 @@
+write these commands to do these things:
+to delete - python -m utils.delete_tables
+to create - python -m utils.create_tables
