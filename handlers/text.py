@@ -2,11 +2,56 @@ from aiogram import Router, types
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from fsm.states import CreateGallery, DeleteGallery
-from database.connection import register_user, add_new_gallery, get_galleries, delete_gallery
+from database.connection import (
+    register_user,
+    add_new_gallery,
+    get_galleries,
+    delete_gallery,
+)
 from database.tables import check_gallery_exists
 
 
 router = Router()
+
+
+@router.message(StateFilter("*"), Command("cancel"))
+async def handle_cancel(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+
+    await state.clear()
+    await message.answer("canceled ❌")
+
+
+@router.message(Command("deletegallery"))
+async def handle_deletegallery(message: types.Message, state: FSMContext):
+    galleries = get_galleries(message.from_user.id)
+
+    if not galleries:
+        return await message.answer("You don't have any galleries to delete")
+
+    names = ", ".join([g[0] for g in galleries])
+    await message.answer(
+        f"Your galleries: {names}\nWrite the name of the gallery that you wanna delete:"
+    )
+    await state.set_state(DeleteGallery.waiting_for_name)
+
+
+@router.message(DeleteGallery.waiting_for_name)
+async def process_deletegallery(message: types.Message, state: FSMContext):
+    gallery_name = message.text.strip()
+    tg_chat_id = message.from_user.id
+
+    if not check_gallery_exists(tg_chat_id, gallery_name):
+        return await message.answer(
+            "There's no such a gallery. Let's try again or write /cancel"
+        )
+
+    delete_gallery(tg_chat_id, gallery_name)
+
+    await message.answer(f"Gallery {gallery_name} has successfully been deleted!")
+    await state.clear()
 
 
 @router.message(Command("start"))
@@ -78,41 +123,3 @@ async def handle_mygalleries(message: types.Message):
 {galleries_formatted}
     """
     )
-
-
-@router.message(Command("deletegallery"))
-async def handle_deletegallery(message: types.Message, state: FSMContext):
-    galleries = get_galleries(message.from_user.id)
-
-    if not galleries:
-        return await message.answer("You don't have any galleries to delete")
-
-    names = ", ".join([g[0] for g in galleries])
-    await message.answer(
-        f"Your galleries: {names}\nWrite the name of the gallery that you wanna delete:"
-    )
-    await state.set_state(DeleteGallery.waiting_for_name)
-
-
-@router.message(DeleteGallery.waiting_for_name)
-async def process_deletegallery(message: types.Message, state: FSMContext):
-    gallery_name = message.text.strip()
-    tg_chat_id = message.from_user.id
-    
-    if not check_gallery_exists(tg_chat_id, gallery_name):
-        return await message.answer("There's no such a gallery. Let's try again or write /cancel")
-    
-    delete_gallery(tg_chat_id, gallery_name)
-    
-    await message.answer(f"Gallery {gallery_name} has successfully been deleted!")
-    await state.clear()
-
-
-@router.message(StateFilter("*"), Command("cancel"))
-async def handle_cancel(message: types.Message, state: FSMContext):
-    current_state = await state.get_state()
-    if current_state is None:
-        return
-
-    await state.clear()
-    await message.answer("canceled ❌")
