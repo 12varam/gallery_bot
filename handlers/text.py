@@ -85,11 +85,11 @@ async def handle_deletegallery(message: types.Message, state: FSMContext):
     galleries = get_galleries(message.from_user.id)
 
     if not galleries:
-        return await message.answer("У тебя нет галерей для удаления.")
+        return await message.answer("You don't have any galleries to delete")
 
     names = ", ".join([g[0] for g in galleries])
     await message.answer(
-        f"Твои галереи: {names}\nНапиши название той, которую хочешь удалить:"
+        f"Your galleries: {names}\nWrite the name of the gallery that you wanna delete:"
     )
     await state.set_state(DeleteGallery.waiting_for_name)
 
