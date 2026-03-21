@@ -35,6 +35,22 @@ def create_tables():
     connection.close()
 
 
+def delete_tables():
+    connection, cursor = connect_to_db()
+
+    cursor.execute(
+        """
+        DROP TABLE IF EXISTS images CASCADE;
+        DROP TABLE IF EXISTS galleries CASCADE;
+        DROP TABLE IF EXISTS users CASCADE;
+    """
+    )
+
+    connection.commit()
+    connection.close()
+    print("All tables have been deleted successfully")
+
+
 def check_gallery_exists(tg_chat_id, gallery_name):
     connection, cursor = connect_to_db()
 
