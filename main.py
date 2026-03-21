@@ -20,6 +20,7 @@ async def main():
                 command="mygalleries", description="Will show you a list of galleries"
             ),
             BotCommand(command="deletegallery", description="Delete a certain gallery"),
+            BotCommand(command="cancel", description="cancel the current operation"),
         ]
     )
 
