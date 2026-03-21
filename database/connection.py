@@ -65,3 +65,18 @@ def get_galleries(tg_chat_id):
 
     connection.close()
     return gallery_names
+
+
+def delete_gallery(tg_chat_id, gallery_name):
+    connection, cursor = connect_to_db()
+
+    user_id = get_user_id(cursor, tg_chat_id)
+
+    if user_id:
+        cursor.execute(
+            "DELETE FROM galleries WHERE name = %s AND user_id = %s",
+            (gallery_name, user_id),
+        )
+    
+    connection.commit()
+    connection.close()
