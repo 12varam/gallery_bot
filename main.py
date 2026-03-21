@@ -16,7 +16,10 @@ async def main():
             BotCommand(command="start", description="Start the bot"),
             BotCommand(command="info", description="Get information about this bot"),
             BotCommand(command="newgallery", description="Add a new gallery"),
-            BotCommand(command="mygalleries", description="Will show you a list of galleries"),
+            BotCommand(
+                command="mygalleries", description="Will show you a list of galleries"
+            ),
+            BotCommand(command="deletegallery", description="Delete a certain gallery"),
         ]
     )
 
@@ -28,5 +31,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
-    
+
     asyncio.run(main())
