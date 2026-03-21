@@ -105,7 +105,7 @@ async def process_gallery_name(message: types.Message, state: FSMContext):
 
 @router.message(Command("mygalleries"))
 async def handle_mygalleries(message: types.Message):
-    galleries = get_galleries(message.chat.id)
+    galleries = get_galleries(message.from_user.id)
 
     galleries_corrected = []
 
