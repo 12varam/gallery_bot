@@ -1,8 +1,8 @@
 from aiogram import Router, types
-from aiogram.filters.command import Command
+from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from fsm.states import CreateGallery
-from database.connection import register_user, add_new_gallery, get_galleries
+from fsm.states import CreateGallery, DeleteGallery
+from database.connection import register_user, add_new_gallery, get_galleries, delete_gallery
 from database.tables import check_gallery_exists
 
 
@@ -39,17 +39,17 @@ async def process_gallery_name(message: types.Message, state: FSMContext):
 
     if len(gallery_name.split()) > 1:
         return await message.answer(
-            "Gallery's name should be made of 1 word. Let's try something else:"
+            "Gallery's name should be made of 1 word. Let's try something else or write /cancel"
         )
 
     if len(gallery_name) < 3 or len(gallery_name) > 30:
         return await message.answer(
-            "Gallery's name shouldn't be shorter than 3 and longer than 30 symbols. Let's try something else:"
+            "Gallery's name shouldn't be shorter than 3 and longer than 30 symbols. Let's try something else or write /cancel"
         )
 
     if check_gallery_exists(tg_chat_id, gallery_name):
         return await message.answer(
-            f"Gallery named '{gallery_name}' already exists. Let's try something else:"
+            f"Gallery named '{gallery_name}' already exists. Let's try something else or write /cancel"
         )
 
     add_new_gallery(tg_chat_id, gallery_name)
@@ -63,12 +63,12 @@ async def handle_mygalleries(message: types.Message):
     galleries = get_galleries(message.chat.id)
 
     galleries_corrected = []
-    
+
     for g in galleries:
         galleries_corrected.append(g[0])
 
     galleries_formatted = ""
-    
+
     for g_name in galleries_corrected:
         galleries_formatted += f"{g_name}\n"
 
@@ -78,3 +78,41 @@ async def handle_mygalleries(message: types.Message):
 {galleries_formatted}
     """
     )
+
+
+@router.message(Command("deletegallery"))
+async def handle_deletegallery(message: types.Message, state: FSMContext):
+    galleries = get_galleries(message.from_user.id)
+
+    if not galleries:
+        return await message.answer("У тебя нет галерей для удаления.")
+
+    names = ", ".join([g[0] for g in galleries])
+    await message.answer(
+        f"Твои галереи: {names}\nНапиши название той, которую хочешь удалить:"
+    )
+    await state.set_state(DeleteGallery.waiting_for_name)
+
+
+@router.message(DeleteGallery.waiting_for_name)
+async def process_deletegallery(message: types.Message, state: FSMContext):
+    gallery_name = message.text.strip()
+    tg_chat_id = message.from_user.id
+    
+    if not check_gallery_exists(tg_chat_id, gallery_name):
+        return await message.answer("There's no such a gallery. Let's try again or write /cancel")
+    
+    delete_gallery(tg_chat_id, gallery_name)
+    
+    await message.answer(f"Gallery {gallery_name} has successfully been deleted!")
+    await state.clear()
+
+
+@router.message(StateFilter("*"), Command("cancel"))
+async def handle_cancel(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+
+    await state.clear()
+    await message.answer("canceled ❌")
