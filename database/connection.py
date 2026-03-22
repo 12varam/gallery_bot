@@ -77,6 +77,25 @@ def delete_gallery(tg_chat_id, gallery_name):
             "DELETE FROM galleries WHERE name = %s AND user_id = %s",
             (gallery_name, user_id),
         )
-    
+
+    connection.commit()
+    connection.close()
+
+
+def update_gallery_name(tg_chat_id, old_name, new_name):
+    connection, cursor = connect_to_db()
+
+    user_id = get_user_id(cursor, tg_chat_id)
+
+    if user_id:
+        cursor.execute(
+            """
+            UPDATE galleries 
+            SET name = %s 
+            WHERE name = %s AND user_id = %s
+            """,
+            (new_name, old_name, user_id),
+        )
+
     connection.commit()
     connection.close()
