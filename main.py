@@ -15,12 +15,9 @@ async def main():
         commands=[
             BotCommand(command="start", description="Start the bot"),
             BotCommand(command="info", description="Get information about this bot"),
-            BotCommand(command="newgallery", description="Add a new gallery"),
-            BotCommand(
-                command="mygalleries", description="Will show you a list of galleries"
-            ),
-            BotCommand(command="deletegallery", description="Delete a certain gallery"),
-            BotCommand(command="cancel", description="cancel the current operation"),
+            BotCommand(command="newgallery", description="Create a new gallery"),
+            BotCommand(command="mygalleries", description="Manage your galleries"),
+            BotCommand(command="cancel", description="Cancel the current operation"),
         ]
     )
 
