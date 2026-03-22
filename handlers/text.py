@@ -126,6 +126,11 @@ async def process_rename_finish(message: types.Message, state: FSMContext):
 
     if len(new_name.split()) > 1 or not (3 <= len(new_name) <= 30):
         return await message.answer("Invalid name. Must be 3-30 characters, one word.")
+    
+    already_exists = check_gallery_exists(message.from_user.id, new_name)
+    
+    if already_exists:
+        return await message.answer("This name is already taken, try something else")
 
     update_gallery_name(message.from_user.id, old_name, new_name)
     await message.answer(f"Renamed: {old_name} ➡️ {new_name} ✅")
