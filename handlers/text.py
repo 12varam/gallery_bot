@@ -120,20 +120,35 @@ async def process_rename_start(callback: types.CallbackQuery, state: FSMContext)
 
 @router.message(RenameGallery.waiting_for_new_name)
 async def process_rename_finish(message: types.Message, state: FSMContext):
+    if not message.text:
+        return await message.answer(
+            "Please send a <b>text</b> name for the gallery. Stickers or photos are not allowed! ❌"
+        )
+
+    if message.text.startswith("/"):
+        return await message.answer(
+            "Gallery name cannot start with '/'. Please enter a plain word or /cancel."
+        )
+
     new_name = message.text.strip()
     data = await state.get_data()
     old_name = data.get("old_name")
+    tg_chat_id = message.from_user.id
 
     if len(new_name.split()) > 1 or not (3 <= len(new_name) <= 30):
-        return await message.answer("Invalid name. Must be 3-30 characters, one word.")
-    
-    already_exists = check_gallery_exists(message.from_user.id, new_name)
-    
-    if already_exists:
-        return await message.answer("This name is already taken, try something else")
+        return await message.answer(
+            "Invalid name. Use one word (3-30 characters). Try again or /cancel"
+        )
 
-    update_gallery_name(message.from_user.id, old_name, new_name)
-    await message.answer(f"Renamed: {old_name} ➡️ {new_name} ✅")
+    if check_gallery_exists(tg_chat_id, new_name):
+        return await message.answer(
+            f"Gallery with name '{new_name}' already exists! Choose another name."
+        )
+
+    update_gallery_name(tg_chat_id, old_name, new_name)
+    await message.answer(
+        f"Success! Gallery renamed: <b>{old_name}</b> ➡️ <b>{new_name}</b> ✅"
+    )
     await state.clear()
 
 
