@@ -1,4 +1,4 @@
-from database.connection import connect_to_db
+from database.connection import connect_to_db, get_user_id
 
 
 def create_tables():
@@ -53,16 +53,12 @@ def delete_tables():
 
 def check_gallery_exists(tg_chat_id, gallery_name):
     connection, cursor = connect_to_db()
+    user_id = get_user_id(cursor, tg_chat_id)
 
     cursor.execute(
-        """
-        SELECT 1 FROM galleries
-        JOIN users ON galleries.user_id = users.id
-        WHERE users.tg_chat_id = %s AND galleries.name = %s
-    """,
-        (tg_chat_id, gallery_name),
+        "SELECT 1 FROM galleries WHERE name = %s AND user_id = %s",
+        (gallery_name, user_id),
     )
-
     exists = cursor.fetchone() is not None
     connection.close()
     return exists
