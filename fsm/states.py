@@ -5,9 +5,5 @@ class CreateGallery(StatesGroup):
     waiting_for_name = State()
 
 
-class DeleteGallery(StatesGroup):
-    waiting_for_name = State()
-
-
 class RenameGallery(StatesGroup):
     waiting_for_new_name = State()
