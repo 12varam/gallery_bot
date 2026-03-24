@@ -126,3 +126,20 @@ def add_image_to_db(tg_chat_id, file_id, gallery_name, description=""):
         connection.commit()
 
     connection.close()
+
+
+def get_gallery_images(tg_chat_id, gallery_name):
+    connection, cursor = connect_to_db()
+
+    gallery_id = get_gallery_id(cursor, gallery_name, tg_chat_id)
+
+    images = []
+    if gallery_id:
+        cursor.execute(
+            "SELECT file_id, description FROM images WHERE gallery_id = %s",
+            (gallery_id,),
+        )
+        images = cursor.fetchall()
+
+    connection.close()
+    return images

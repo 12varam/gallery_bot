@@ -9,9 +9,11 @@ from database.connection import (
     delete_gallery,
     update_gallery_name,
     add_image_to_db,
+    get_gallery_images,
 )
 from database.tables import check_gallery_exists
 from keyboards.inline import get_galleries_list_kb, get_gallery_management_kb
+import logging
 
 router = Router()
 
@@ -156,9 +158,26 @@ async def process_rename_finish(message: types.Message, state: FSMContext):
 @router.callback_query(F.data.startswith("view_"))
 async def process_view_gallery(callback: types.CallbackQuery):
     gallery_name = callback.data.split("_")[1]
-    await callback.message.edit_text(
-        f"Viewing photos in '{gallery_name}'... (Coming soon)"
-    )
+    tg_chat_id = callback.from_user.id
+
+    images = get_gallery_images(tg_chat_id, gallery_name)
+
+    if not images:
+        await callback.answer(f"Gallery '{gallery_name}' is empty! 📭", show_alert=True)
+        return
+
+    await callback.message.answer(f"Showing images from <b>{gallery_name}</b>:")
+
+    for file_id, description in images:
+        caption_text = f"📝 {description}" if description else ""
+
+        try:
+            await callback.message.answer_photo(
+                photo=file_id, caption=caption_text, parse_mode="HTML"
+            )
+        except Exception as e:
+            logging.error(f"Error sending photo: {e}")
+
     await callback.answer()
 
 
