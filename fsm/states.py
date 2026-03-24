@@ -7,3 +7,8 @@ class CreateGallery(StatesGroup):
 
 class RenameGallery(StatesGroup):
     waiting_for_new_name = State()
+
+
+class AddPhoto(StatesGroup):
+    waiting_for_photo = State()
+    waiting_for_description = State()

@@ -37,6 +37,18 @@ def get_user_id(cursor, tg_chat_id):
     return user_id[0] if user_id else None
 
 
+def get_gallery_id(cursor, gallery_name, tg_chat_id):
+    user_id = get_user_id(cursor, tg_chat_id)
+
+    cursor.execute(
+        "SELECT id FROM galleries WHERE name = %s AND user_id = %s",
+        (gallery_name, user_id),
+    )
+    result = cursor.fetchone()
+
+    return result[0] if result else None
+
+
 def add_new_gallery(tg_chat_id, gallery_name):
     connection, cursor = connect_to_db()
 
@@ -98,4 +110,19 @@ def update_gallery_name(tg_chat_id, old_name, new_name):
         )
 
     connection.commit()
+    connection.close()
+
+
+def add_image_to_db(tg_chat_id, file_id, gallery_name, description=""):
+    connection, cursor = connect_to_db()
+
+    gallery_id = get_gallery_id(cursor, gallery_name, tg_chat_id)
+
+    if gallery_id:
+        cursor.execute(
+            "INSERT INTO images (file_id, gallery_id, description) VALUES (%s, %s, %s)",
+            (file_id, gallery_id, description),
+        )
+        connection.commit()
+
     connection.close()

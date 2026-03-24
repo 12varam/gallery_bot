@@ -1,13 +1,14 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from fsm.states import CreateGallery, RenameGallery
+from fsm.states import CreateGallery, RenameGallery, AddPhoto
 from database.connection import (
     register_user,
     add_new_gallery,
     get_galleries,
     delete_gallery,
     update_gallery_name,
+    add_image_to_db,
 )
 from database.tables import check_gallery_exists
 from keyboards.inline import get_galleries_list_kb, get_gallery_management_kb
@@ -159,3 +160,47 @@ async def process_view_gallery(callback: types.CallbackQuery):
         f"Viewing photos in '{gallery_name}'... (Coming soon)"
     )
     await callback.answer()
+
+
+@router.callback_query(F.data.startswith("addphoto_"))
+async def process_add_photo_start(callback: types.CallbackQuery, state: FSMContext):
+    gallery_name = callback.data.split("_")[1]
+
+    await state.update_data(selected_gallery=gallery_name)
+
+    await callback.message.edit_text(
+        f"Selected gallery: <b>{gallery_name}</b>\n\nPlease send me the photo you want to add. 📸"
+    )
+    await state.set_state(AddPhoto.waiting_for_photo)
+    await callback.answer()
+
+
+@router.message(AddPhoto.waiting_for_photo, F.photo)
+async def process_photo_received(message: types.Message, state: FSMContext):
+    photo_id = message.photo[-1].file_id
+    await state.update_data(photo_id=photo_id)
+
+    data = await state.get_data()
+    gallery_name = data.get("selected_gallery")
+
+    await message.answer(
+        f"Got it! Now send a description for this photo to save it in <b>{gallery_name}</b> (or /skip):"
+    )
+    await state.set_state(AddPhoto.waiting_for_description)
+
+
+@router.message(AddPhoto.waiting_for_description)
+async def process_photo_description_final(message: types.Message, state: FSMContext):
+    if not message.text and not message.caption:
+        return await message.answer("Please send description as text or /skip")
+
+    text = message.text or message.caption
+    description = "" if text == "/skip" else text
+
+    data = await state.get_data()
+    photo_id = data.get("photo_id")
+    gallery_name = data.get("selected_gallery")
+
+    add_image_to_db(message.from_user.id, photo_id, gallery_name, description)
+    await message.answer(f"Photo successfully saved to <b>{gallery_name}</b>! ✅")
+    await state.clear()
