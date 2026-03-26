@@ -93,7 +93,7 @@ async def handle_mygalleries(message: types.Message):
 
 @router.callback_query(F.data.startswith("select_"))
 async def process_select_gallery(callback: types.CallbackQuery):
-    gallery_name = callback.data.split("_")[1]
+    gallery_name = callback.data.split("_")[-1]
     await callback.message.edit_text(
         f"Gallery: <b>{gallery_name}</b>\nWhat would you like to do?",
         reply_markup=get_gallery_management_kb(gallery_name),
@@ -112,7 +112,7 @@ async def process_back_to_list(callback: types.CallbackQuery):
 
 @router.callback_query(F.data.startswith("deletegallery_"))
 async def ask_confirm_delete(callback: types.CallbackQuery):
-    gallery_name = callback.data.split("_")[1]
+    gallery_name = callback.data.split("_")[-1]
 
     await callback.message.edit_text(
         f"Are you sure you wanna delete the gallery '{gallery_name}'?",
@@ -123,7 +123,7 @@ async def ask_confirm_delete(callback: types.CallbackQuery):
 
 @router.callback_query(F.data.startswith("confirm_del_"))
 async def delete_gallery_confirm(callback: types.CallbackQuery):
-    gallery_name = callback.data.split("_")[-1]
+    gallery_name = callback.data.split("_")[-11]
 
     delete_gallery(callback.from_user.id, gallery_name)
 
@@ -141,7 +141,7 @@ async def cancel_the_deletement_of_gallery(callback: types.CallbackQuery):
 
 @router.callback_query(F.data.startswith("rename_"))
 async def process_rename_start(callback: types.CallbackQuery, state: FSMContext):
-    gallery_name = callback.data.split("_")[1]
+    gallery_name = callback.data.split("_")[-1]
     await state.update_data(old_name=gallery_name)
     await callback.message.edit_text(f"Enter a new name for '{gallery_name}':")
     await state.set_state(RenameGallery.waiting_for_new_name)
@@ -184,7 +184,7 @@ async def process_rename_finish(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data.startswith("view_"))
 async def process_view_gallery(callback: types.CallbackQuery):
-    gallery_name = callback.data.split("_")[1]
+    gallery_name = callback.data.split("_")[-1]
     tg_chat_id = callback.from_user.id
 
     images = get_gallery_images(tg_chat_id, gallery_name)
@@ -212,7 +212,7 @@ async def process_view_gallery(callback: types.CallbackQuery):
 
 @router.callback_query(F.data.startswith("addphoto_"))
 async def process_add_photo_start(callback: types.CallbackQuery, state: FSMContext):
-    gallery_name = callback.data.split("_")[1]
+    gallery_name = callback.data.split("_")[-1]
 
     await state.update_data(selected_gallery=gallery_name)
 
