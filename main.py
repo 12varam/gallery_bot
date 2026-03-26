@@ -18,7 +18,6 @@ async def main():
             BotCommand(command="newgallery", description="Create a new gallery"),
             BotCommand(command="mygalleries", description="Manage your galleries"),
             BotCommand(command="cancel", description="Cancel the current operation"),
-            BotCommand(command="newphoto", description="Add a photo to a gallery"),
         ]
     )
 
