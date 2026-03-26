@@ -12,7 +12,11 @@ from database.connection import (
     get_gallery_images,
 )
 from database.tables import check_gallery_exists
-from keyboards.inline import get_galleries_list_kb, get_gallery_management_kb
+from keyboards.inline import (
+    get_galleries_list_kb,
+    get_gallery_management_kb,
+    get_confirm_delete_kb,
+)
 import logging
 
 router = Router()
@@ -105,10 +109,29 @@ async def process_back_to_list(callback: types.CallbackQuery):
 
 
 @router.callback_query(F.data.startswith("delete_"))
-async def process_delete_gallery(callback: types.CallbackQuery):
+async def ask_confirm_delete(callback: types.CallbackQuery):
     gallery_name = callback.data.split("_")[1]
+    
+    await callback.message.edit_text(
+        f"Are you sure you wanna delete the gallery '{gallery_name}'?",
+        reply_markup=get_confirm_delete_kb(gallery_name),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("confirm_del_"))
+async def delete_gallery_confirm(callback: types.CallbackQuery):
+    gallery_name = callback.data.split("_")[-1]
+
     delete_gallery(callback.from_user.id, gallery_name)
-    await callback.message.edit_text(f"Gallery '{gallery_name}' deleted! 🗑")
+
+    await callback.message.edit_text(f"Successfully deleted gallery '{gallery_name}' ✅")
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("cancel_delete"))
+async def cancel_the_deletement_of_gallery(callback: types.CallbackQuery):
+    await callback.message.edit_text("Canceled the deletement of the gallery ❌")
     await callback.answer()
 
 
