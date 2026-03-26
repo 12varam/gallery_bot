@@ -151,3 +151,35 @@ def remove_photo_from_db(photo_id):
 
     connection.commit()
     connection.close()
+
+
+def edit_photo_desc(photo_id, newdesc):
+    connection, cursor = connect_to_db()
+
+    cursor.execute(
+        """
+        UPDATE images
+        SET description = %s
+        WHERE id = %s
+        """,
+        (newdesc, photo_id),
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def edit_photo(photo_id, new_fileid):
+    connection, cursor = connect_to_db()
+
+    cursor.execute(
+        """
+        UPDATE images
+        SET file_id = %s
+        WHERE id = %s
+        """,
+        (new_fileid, photo_id),
+    )
+
+    connection.commit()
+    connection.close()

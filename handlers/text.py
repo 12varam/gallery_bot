@@ -1,7 +1,7 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from fsm.states import CreateGallery, RenameGallery, AddPhoto
+from fsm.states import CreateGallery, RenameGallery, AddPhoto, EditPhoto, EditPhotoDesc
 from database.connection import (
     add_image_to_db,
     add_new_gallery,
@@ -11,6 +11,8 @@ from database.connection import (
     register_user,
     remove_photo_from_db,
     update_gallery_name,
+    edit_photo,
+    edit_photo_desc,
 )
 from database.tables import check_gallery_exists
 from keyboards.inline import (
@@ -274,3 +276,56 @@ async def delete_photo_handler(callback: types.CallbackQuery):
         await callback.message.answer(
             "Photo removed from DB, but I can't delete the message (it might be too old)."
         )
+
+
+@router.callback_query(F.data.startswith("editdesc_"))
+async def process_edit_description_start(
+    callback: types.CallbackQuery, state: FSMContext
+):
+    photo_id = int(callback.data.split("_")[1])
+    await state.update_data(edit_photo_id=photo_id)
+
+    await callback.message.answer(
+        "Please send a <b>new description</b> for this photo (or /cancel):"
+    )
+    await state.set_state(EditPhotoDesc.waiting_for_new_description)
+    await callback.answer()
+
+
+@router.message(EditPhotoDesc.waiting_for_new_description)
+async def process_new_description_received(message: types.Message, state: FSMContext):
+    if not message.text or message.text.startswith("/"):
+        return await message.answer("Please send a valid text description.")
+
+    new_desc = message.text.strip()
+    data = await state.get_data()
+    photo_id = data.get("edit_photo_id")
+
+    edit_photo_desc(photo_id, new_desc)
+
+    await message.answer(f"Description updated successfully! ✅")
+    await state.clear()
+
+
+@router.callback_query(F.data.startswith("editfile_"))
+async def process_edit_photo_start(callback: types.CallbackQuery, state: FSMContext):
+    photo_id = int(callback.data.split("_")[1])
+    await state.update_data(edit_photo_id=photo_id)
+
+    await callback.message.answer(
+        "Please send a <b>new photo</b> to replace the old one (or /cancel):"
+    )
+    await state.set_state(EditPhoto.waiting_for_new_photo)
+    await callback.answer()
+
+
+@router.message(EditPhoto.waiting_for_new_photo, F.photo)
+async def process_new_photo_received(message: types.Message, state: FSMContext):
+    new_file_id = message.photo[-1].file_id
+    data = await state.get_data()
+    photo_id = data.get("edit_photo_id")
+
+    edit_photo(photo_id, new_file_id)
+
+    await message.answer("Photo replaced successfully! 🔄")
+    await state.clear()
