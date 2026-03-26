@@ -115,13 +115,12 @@ def update_gallery_name(tg_chat_id, old_name, new_name):
 
 def get_gallery_images(tg_chat_id, gallery_name):
     connection, cursor = connect_to_db()
-
     gallery_id = get_gallery_id(cursor, gallery_name, tg_chat_id)
 
     images = []
     if gallery_id:
         cursor.execute(
-            "SELECT file_id, description FROM images WHERE gallery_id = %s",
+            "SELECT id, file_id, description FROM images WHERE gallery_id = %s",
             (gallery_id,),
         )
         images = cursor.fetchall()
@@ -145,13 +144,10 @@ def add_image_to_db(tg_chat_id, file_id, gallery_name, description=""):
     connection.close()
 
 
-def remove_photo_from_db(tg_chat_id, file_id, gallery_name):
+def remove_photo_from_db(photo_id):
     connection, cursor = connect_to_db()
 
-    gallery_id = get_gallery_id(cursor, gallery_name, tg_chat_id)
+    cursor.execute("DELETE FROM images WHERE id = %s", (photo_id,))
 
-    if gallery_id:
-        cursor.execute("DELETE FROM images WHERE file_id = %s", (file_id,))
-        connection.commit()
-
+    connection.commit()
     connection.close()
