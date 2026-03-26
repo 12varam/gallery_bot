@@ -12,3 +12,8 @@ class RenameGallery(StatesGroup):
 class AddPhoto(StatesGroup):
     waiting_for_photo = State()
     waiting_for_description = State()
+
+
+class RemovePhoto(StatesGroup):
+    waiting_for_photo = State()
+    waiting_for_description = State()
