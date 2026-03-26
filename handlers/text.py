@@ -17,7 +17,7 @@ from keyboards.inline import (
     get_galleries_list_kb,
     get_gallery_management_kb,
     get_confirm_delete_kb,
-    delete_photo_kb,
+    get_photo_actions_kb,
 )
 import logging
 
@@ -195,12 +195,14 @@ async def process_view_gallery(callback: types.CallbackQuery):
 
     await callback.message.answer(f"Showing images from <b>{gallery_name}</b>:")
 
-    for _, file_id, description in images:
-        caption_text = f"📝 {description}" if description else ""
+    for p_id, f_id, desc in images:
+        caption_text = f"📝 {desc}" if desc else "No description"
 
         try:
             await callback.message.answer_photo(
-                photo=file_id, caption=caption_text, parse_mode="HTML"
+                photo=f_id,
+                caption=caption_text,
+                reply_markup=get_photo_actions_kb(p_id),
             )
         except Exception as e:
             logging.error(f"Error sending photo: {e}")
@@ -233,35 +235,6 @@ async def process_photo_received(message: types.Message, state: FSMContext):
         f"Got it! Now send a description for this photo to save it in <b>{gallery_name}</b> (or /skip):"
     )
     await state.set_state(AddPhoto.waiting_for_description)
-
-
-@router.callback_query(F.data.startswith("removephoto_"))
-async def remove_photo_from_gallery(callback: types.CallbackQuery):
-    gallery_name = callback.data.split("_")[1]
-    images = get_gallery_images(callback.from_user.id, gallery_name)
-
-    if not images:
-        await callback.answer(f"Gallery '{gallery_name}' is empty! 📭", show_alert=True)
-        return
-
-    await callback.message.answer(
-        f"choose the photo you want to remove from the following list ⬇️:"
-    )
-
-    for id, file_id, description in images:
-        caption_text = f"📝 {description}" if description else ""
-
-        try:
-            await callback.message.answer_photo(
-                photo=file_id,
-                caption=caption_text,
-                parse_mode="HTML",
-                reply_markup=delete_photo_kb(id),
-            )
-        except Exception as e:
-            logging.error(f"Error sending photo: {e}")
-
-    await callback.answer()
 
 
 @router.message(AddPhoto.waiting_for_description)

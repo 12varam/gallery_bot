@@ -29,11 +29,6 @@ def get_gallery_management_kb(gallery_name):
     )
     builder.row(
         types.InlineKeyboardButton(
-            text="➖ Remove Photo", callback_data=f"removephoto_{gallery_name}"
-        )
-    )
-    builder.row(
-        types.InlineKeyboardButton(
             text="✏️ Rename", callback_data=f"rename_{gallery_name}"
         )
     )
@@ -60,13 +55,21 @@ def get_confirm_delete_kb(gallery_name):
     return builder.as_markup()
 
 
-def delete_photo_kb(photo_id):
+def get_photo_actions_kb(photo_id):
     builder = InlineKeyboardBuilder()
 
     builder.row(
         types.InlineKeyboardButton(
-            text="❌ delete", callback_data=f"delete_photo_{photo_id}"
+            text="📝 Edit Desc", callback_data=f"editdesc_{photo_id}"
+        ),
+        types.InlineKeyboardButton(
+            text="🔄 Change Photo", callback_data=f"editfile_{photo_id}"
+        ),
+    )
+    builder.row(
+        types.InlineKeyboardButton(
+            text="🗑 Delete Photo", callback_data=f"delete_photo_{photo_id}"
         )
     )
-    
+
     return builder.as_markup()
