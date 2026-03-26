@@ -29,6 +29,11 @@ def get_gallery_management_kb(gallery_name):
     )
     builder.row(
         types.InlineKeyboardButton(
+            text="➖ Remove Photo", callback_data=f"removephoto_{gallery_name}"
+        )
+    )
+    builder.row(
+        types.InlineKeyboardButton(
             text="✏️ Rename", callback_data=f"rename_{gallery_name}"
         )
     )
