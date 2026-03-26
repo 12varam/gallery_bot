@@ -111,7 +111,7 @@ async def process_back_to_list(callback: types.CallbackQuery):
 @router.callback_query(F.data.startswith("delete_"))
 async def ask_confirm_delete(callback: types.CallbackQuery):
     gallery_name = callback.data.split("_")[1]
-    
+
     await callback.message.edit_text(
         f"Are you sure you wanna delete the gallery '{gallery_name}'?",
         reply_markup=get_confirm_delete_kb(gallery_name),
@@ -125,7 +125,9 @@ async def delete_gallery_confirm(callback: types.CallbackQuery):
 
     delete_gallery(callback.from_user.id, gallery_name)
 
-    await callback.message.edit_text(f"Successfully deleted gallery '{gallery_name}' ✅")
+    await callback.message.edit_text(
+        f"Successfully deleted gallery '{gallery_name}' ✅"
+    )
     await callback.answer()
 
 
