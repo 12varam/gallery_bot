@@ -16,4 +16,3 @@ class AddPhoto(StatesGroup):
 
 class RemovePhoto(StatesGroup):
     waiting_for_photo = State()
-    waiting_for_description = State()
