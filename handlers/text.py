@@ -16,10 +16,11 @@ from database.connection import (
 )
 from database.tables import check_gallery_exists
 from keyboards.inline import (
+    get_confirm_delete_kb,
     get_galleries_list_kb,
     get_gallery_management_kb,
-    get_confirm_delete_kb,
     get_photo_actions_kb,
+    get_photos_pagination_list_kb,
 )
 import logging
 
@@ -126,7 +127,7 @@ async def ask_confirm_delete(callback: types.CallbackQuery):
 
 @router.callback_query(F.data.startswith("confirm_del_"))
 async def delete_gallery_confirm(callback: types.CallbackQuery):
-    gallery_name = callback.data.split("_")[-11]
+    gallery_name = callback.data.split("_")[-1]
 
     delete_gallery(callback.from_user.id, gallery_name)
 
@@ -196,20 +197,34 @@ async def process_view_gallery(callback: types.CallbackQuery):
         await callback.answer(f"Gallery '{gallery_name}' is empty! 📭", show_alert=True)
         return
 
-    await callback.message.answer(f"Showing images from <b>{gallery_name}</b>:")
+    await callback.message.edit_text(
+        f"📂 Gallery: <b>{gallery_name}</b>\nTotal items: {len(images)}\n\nSelect a photo to view:",
+        reply_markup=get_photos_pagination_list_kb(images, gallery_name, page=1),
+    )
+    await callback.answer()
 
-    for p_id, f_id, desc in images:
-        caption_text = f"📝 {desc}" if desc else "No description"
 
-        try:
-            await callback.message.answer_photo(
-                photo=f_id,
-                caption=caption_text,
-                reply_markup=get_photo_actions_kb(p_id),
-            )
-        except Exception as e:
-            logging.error(f"Error sending photo: {e}")
+@router.callback_query(F.data.startswith("showphoto_"))
+async def process_show_specific_photo(callback: types.CallbackQuery):
+    photo_id = int(callback.data.split("_")[1])
 
+    from database.connection import connect_to_db
+
+    conn, cursor = connect_to_db()
+    cursor.execute("SELECT file_id, description FROM images WHERE id = %s", (photo_id,))
+    res = cursor.fetchone()
+    conn.close()
+
+    if not res:
+        return await callback.answer("Photo not found! ❌")
+
+    file_id, desc = res
+
+    await callback.message.answer_photo(
+        photo=file_id,
+        caption=f"📝 {desc}" if desc else "No description",
+        reply_markup=get_photo_actions_kb(photo_id),
+    )
     await callback.answer()
 
 
@@ -330,3 +345,25 @@ async def process_new_photo_received(message: types.Message, state: FSMContext):
 
     await message.answer("Photo replaced successfully! 🔄")
     await state.clear()
+
+
+@router.callback_query(F.data.startswith("listpage_"))
+async def process_list_pagination(callback: types.CallbackQuery):
+    parts = callback.data.split("_")
+    gallery_name = parts[1]
+    page = int(parts[2])
+
+    images = get_gallery_images(callback.from_user.id, gallery_name)
+    total_pages = (len(images) + 9) // 10
+
+    if page < 1:
+        return await callback.answer("No previous page! ❌", show_alert=True)
+
+    if page > total_pages:
+        return await callback.answer("No next page! ❌", show_alert=True)
+
+    await callback.message.edit_text(
+        f"Gallery: <b>{gallery_name}</b>\nItems: {len(images)}",
+        reply_markup=get_photos_pagination_list_kb(images, gallery_name, page),
+    )
+    await callback.answer()

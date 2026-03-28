@@ -73,3 +73,50 @@ def get_photo_actions_kb(photo_id):
     )
 
     return builder.as_markup()
+
+
+def get_photos_pagination_list_kb(images, gallery_name, page=1):
+    builder = InlineKeyboardBuilder()
+
+    start_index = (page - 1) * 10
+    end_index = start_index + 10
+
+    current_page_images = images[start_index:end_index]
+
+    for photo_id, _, desc in current_page_images:
+        short_desc = (desc[:20] + "...") if desc else f"ID: {photo_id}"
+        builder.row(
+            types.InlineKeyboardButton(
+                text=f"🖼 {short_desc}", callback_data=f"showphoto_{photo_id}"
+            )
+        )
+
+    nav_buttons = []
+    total_pages = (len(images) + 9) // 10
+
+    nav_buttons.append(
+        types.InlineKeyboardButton(
+            text="⬅️ Prev", callback_data=f"listpage_{gallery_name}_{page - 1}"
+        )
+    )
+
+    nav_buttons.append(
+        types.InlineKeyboardButton(
+            text=f"{page} / {total_pages}", callback_data="ignore"
+        )
+    )
+
+    nav_buttons.append(
+        types.InlineKeyboardButton(
+            text="Next ➡️", callback_data=f"listpage_{gallery_name}_{page + 1}"
+        )
+    )
+
+    builder.row(*nav_buttons)
+    builder.row(
+        types.InlineKeyboardButton(
+            text="⬅️ Back to Menu", callback_data=f"select_{gallery_name}"
+        )
+    )
+
+    return builder.as_markup()
